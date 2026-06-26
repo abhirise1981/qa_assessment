@@ -1,0 +1,14 @@
+{
+  "name": "inventree-ui-automation",
+  "version": "1.0.0",
+  "description": "Playwright TypeScript UI Automation for InvenTree Parts Module",
+  "main": "index.js",
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.42.0",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
+  }
+}

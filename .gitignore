@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+
+# Playwright test execution artifacts
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# macOS system files
+.DS_Store
+
+# Large video walkthrough files (exceeds GitHub 100MB single file limit)
+video/walkthrough_demo.mov
+video/Screen Recording*.mov
+
+# Temporary downloads
+*.incomplete
