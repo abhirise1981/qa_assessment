@@ -1,78 +1,90 @@
-# QA Engineering Assessment Submission
+# Enterprise Quality Engineering & Playwright Automation Showcase
 
-This repository contains the complete deliverables for the Quality Engineering Assessment, consisting of two Case Studies:
-1. **Case Study 1**: End-to-end Quality Engineering on InvenTree's Parts Module (Manual Test Cases, Playwright TypeScript UI/API Automation, Agentic Workflow prompts, and Video script).
-2. **Case Study 2**: Strategic Proposal for a Unified Test Strategy & Investment Plan for a Multi-Product Financial Services Platform.
+This repository serves as a reference architecture demonstrating modern **Quality Engineering (QE)** methodologies, advanced test automation patterns, and enterprise-level test strategy design. It is built to showcase how organizations can shift quality left, scale automation efficiently, and implement robust quality gates in CI/CD pipelines.
 
 ---
 
-## Directory Structure
+## 🛠️ Architecture & Technical Stack
+
+The repository is divided into two primary sections:
+1. **Automation & Test Design Framework**: A fully structured, modular Playwright and TypeScript framework testing both UI and API layers using industry-standard design patterns.
+2. **Enterprise Test Strategy Proposal**: A strategic blueprint to resolve high defect rates in complex, multi-product financial microservices architectures.
+
+---
+
+## 📂 Directory Structure
 
 ```text
-submission/
-├── .github/                           # CI/CD Workflows
+qa_assessment/
+├── .github/                           # CI/CD Infrastructure
 │   └── workflows/
-│       └── playwright.yml             # GitHub Actions CI Configuration
+│       └── playwright.yml             # GitHub Actions continuous automation configuration
 ├── README.md                          # Main project guide (this file)
-├── agents/                            # Agent prompts & instructions
-│   ├── prompts.md                     # Prompts used for generation
-│   └── system-instructions.md         # Persona definition
-├── test-cases/                        # Manual Test Suites
-│   ├── ui-manual-tests.md             # UI/Manual Parts test suite (26 test cases)
-│   └── api-manual-tests.md            # API Manual Parts test suite (15 test cases)
-├── automation/                        # Automated testing scripts
-│   ├── ui/                            # Playwright TypeScript UI project
+├── agents/                            # Agentic workflow & prompt engineering assets
+│   ├── prompts.md                     # Engineering prompts used for generation
+│   └── system-instructions.md         # Behavioral model definitions
+├── test-cases/                        # Test Design Suites (Manual reference)
+│   ├── ui-manual-tests.md             # 30 detailed UI test cases (A11y, Security, Edge cases)
+│   └── api-manual-tests.md            # 18 detailed API test cases (SQLi, Rate-limiting, Boundaries)
+├── automation/                        # Automated Testing Suites
+│   ├── ui/                            # Playwright TypeScript UI Project
 │   │   ├── package.json
 │   │   ├── playwright.config.ts
+│   │   ├── tsconfig.json
 │   │   ├── pages/                     # Page Object Model (POM) Page Classes
 │   │   │   ├── LoginPage.ts
 │   │   │   ├── CategoryPage.ts
 │   │   │   └── PartPage.ts
 │   │   └── tests/
 │   │       └── parts-ui.spec.ts
-│   └── api/                           # Playwright TypeScript API project
+│   └── api/                           # Playwright TypeScript API Project
 │       ├── package.json
 │       ├── playwright.config.ts
+│       ├── tsconfig.json
 │       ├── controllers/               # API Controllers (Endpoint wrappers)
 │       │   ├── CategoryController.ts
 │       │   └── PartController.ts
 │       └── tests/
 │           └── parts-api.spec.ts
-├── case_study_2/                      # Case Study 2: Fintech Unified Test Strategy
-│   └── financial_test_strategy.md     # Strategy & Investment Plan Proposal
+├── case_study_2/                      # Enterprise Strategy Proposal
+│   └── financial_test_strategy.md     # Pact contract testing, TDM, and SDET roadmap
 └── video/
-    └── README.md                      # Video recording outline, script, & talking points
+    └── README.md                      # Framework walkthrough script and demo outlines
 ```
 
 ---
 
-## 🖥️ How to Run & Demo in VS Code (For Interviewers)
+## 🖥️ How to Run & Demo in VS Code
 
 This project has been pre-configured with all dependencies and browser installations completed. Follow these steps to demo the codebase:
 
 ### 1. Open in VS Code
 - Open **VS Code**.
-- Select **File > Open Folder...** and select this directory (`/Users/apple/Documents/qa_assessment`).
+- Select **File > Open Folder...** and select this directory (`qa_assessment`).
 
 ### 2. Run via the Playwright VS Code Extension (Visual Demo)
 1. Install the official **Playwright Test** extension by Microsoft from the Extensions Marketplace (`Cmd + Shift + X`).
 2. Click the **Testing (Beaker)** icon on the left sidebar.
 3. Check the **"Show browser"** checkbox at the bottom of the Testing panel to watch the execution live.
-4. Click the **Play button** next to any test (e.g. `TC-UI-FLOW-03` under `parts-ui.spec.ts`) to watch the test run in a headed browser window.
+4. Click the **Play button** next to any test (e.g. `parts-api.spec.ts`) to watch the test run in real-time.
 
 ### 3. Run via Terminal (Command Line Demo)
 
 Open the VS Code Terminal and run:
 
-* **To run UI Automation Tests (Headed Browser)**:
+* **To run UI Automation Tests**:
   ```bash
   cd automation/ui
-  npx playwright test --headed
+  npm install
+  npx playwright install
+  npx playwright test
   ```
 
 * **To run API Automation Tests**:
   ```bash
   cd automation/api
+  npm install
+  npx playwright install
   npx playwright test
   ```
 
@@ -84,15 +96,20 @@ npx playwright show-report
 
 ---
 
-## Execution Summaries
+## 🚀 Key Framework Highlights
 
-### Case Study 1: InvenTree QE
-- **Manual Test Coverage**: 26 UI and 15+ API scenarios covering parts creation, detail tabs (Stock, BOM, parameters), categories, units, and boundary/negative conditions.
-- **Automation Tech Stack**: Playwright with TypeScript for both UI and API.
-- **Agentic Workflow**: Configured agentic system-instructions and engineered prompts that guided the test case generation and script creation.
-- **Video Walkthrough**: Contains a structured presentation script for explaining the agentic workflow, code logic, and demo executions in the [video script](file:///Users/apple/Documents/qa_assessment/video/README.md).
+### 1. Unified Test Automation (Playwright + TypeScript)
+* **Page Object Model (POM)**: Enforced strict separation of concerns for the UI project. Pages under `automation/ui/pages/` encapsulate element locators and actions, making test scripts readable and easily maintainable.
+* **API Controller Pattern**: The API project uses `CategoryController` and `PartController` to handle HTTP requests, headers, and payloads, keeping the test specs focused entirely on schema and status assertions.
+* **Data-Driven Loops**: Leveraged parameterized tests to run identical validation logic dynamically across multiple configuration objects, maximizing coverage while reducing code duplication.
+* **State Management**: Built configurations to handle session tokens and authentication states dynamically, bypassing UI logins for subsequent tests.
 
-### Case Study 2: FinTech Unified Test Strategy
-- A detailed strategic proposal to resolve a 30% defect rate stemming from customer data inconsistencies.
-- **Key Frameworks Proposed**: Consumer-Driven Contract testing (Pact), CDC verification pipelines, Synthetic E2E transaction runs, and a self-service Test Data Management (TDM) platform.
-- **Investment & ROI**: A phased 3-stage investment roadmap transforming QAs into SDETs and introducing automated release gates. Detailed in the [strategy document](file:///Users/apple/Documents/qa_assessment/case_study_2/financial_test_strategy.md).
+### 2. Shift-Left Strategy & Test Design
+* Built comprehensive manual suites for both UI and API, highlighting:
+  * **Non-Functional Testing**: WCAG 2.1 Level AA accessibility checks (tab orders, focus states, ARIA roles).
+  * **Vulnerability Testing**: SQL Injection (SQLi) parameters validation, client-side Cross-Site Scripting (XSS) input sanitization, and API Rate-Limiting/throttling checks.
+
+### 3. Enterprise Quality Strategy (FinTech Showcase)
+* Designed a unified strategic roadmap to resolve a 30% production defect rate in a distributed multi-product architecture.
+* Details the setup of **Consumer-Driven Contract (CDC) Testing using Pact** to catch API version schema drifts early.
+* Outlines a secure **Test Data Management (TDM) pipeline** with dynamic data masking for compliance, automated CI/CD release gates, and a phased SDET upskilling roadmap.

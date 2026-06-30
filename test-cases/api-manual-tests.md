@@ -1,4 +1,4 @@
-# Case Study 1: InvenTree Parts API Manual Test Suite
+# API Manual Test Suite - InvenTree Parts Module
 
 This document lists manual API test cases for the InvenTree Parts module, targeting the REST API endpoints `/api/part/` and `/api/part/category/`.
 

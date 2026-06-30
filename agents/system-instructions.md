@@ -1,6 +1,6 @@
 # System Instructions: AI QA Agent Persona
 
-This document defines the system instructions and behavioral configuration that governed the AI agent during the execution of this assessment.
+This document defines the system instructions and behavioral configuration that governed the AI agent during the design and development of this framework.
 
 ---
 

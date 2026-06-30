@@ -1,4 +1,4 @@
-# Case Study 1: InvenTree Parts UI Manual Test Suite
+# UI Manual Test Suite - InvenTree Parts Module
 
 This document outlines a comprehensive manual test suite for the InvenTree Parts module. It covers part creation, detail views, attributes, categories, revisions, units of measure, and boundary conditions.
 

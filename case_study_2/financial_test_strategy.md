@@ -1,4 +1,4 @@
-# Case Study 2: Unified Test Strategy & Investment Plan
+# Unified Test Strategy & QE Investment Proposal
 ## Multi-Product Financial Services Platform
 
 ---

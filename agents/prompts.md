@@ -1,4 +1,4 @@
-# Case Study 1: AI Agent Prompts
+# AI Agent Prompts & Engineering Instructions
 
 This document lists the engineered prompts used to direct the AI agent in generating the manual test cases and automated scripts for the InvenTree Parts module.
 
