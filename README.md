@@ -1,14 +1,50 @@
-# Enterprise Quality Engineering & Playwright Automation Showcase
+# Enterprise Quality Engineering & Playwright Automation Core
+> **Personal Engineering Showcase Project**
 
-This repository serves as a reference architecture demonstrating modern **Quality Engineering (QE)** methodologies, advanced test automation patterns, and enterprise-level test strategy design. It is built to showcase how organizations can shift quality left, scale automation efficiently, and implement robust quality gates in CI/CD pipelines.
+This repository serves as a production-grade reference architecture demonstrating advanced **Quality Engineering (QE)** methodologies, full-stack test automation patterns, and enterprise-level test strategy design. It showcases how to shift quality left, structure maintainable test suites, and enforce automated quality gates.
 
 ---
 
-## 🛠️ Architecture & Technical Stack
+## 🛠️ Architecture & Design Patterns
 
-The repository is divided into two primary sections:
-1. **Automation & Test Design Framework**: A fully structured, modular Playwright and TypeScript framework testing both UI and API layers using industry-standard design patterns.
-2. **Enterprise Test Strategy Proposal**: A strategic blueprint to resolve high defect rates in complex, multi-product financial microservices architectures.
+The automation frameworks are structured to enforce clean separation of concerns and maximize code reuse:
+
+### 1. UI Automation: Page Object Model (POM)
+* Located under [automation/ui/](file:///Users/apple/Documents/qa_assessment/automation/ui).
+* Implements the **POM pattern** via class files under [pages/](file:///Users/apple/Documents/qa_assessment/automation/ui/pages):
+  * [LoginPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/LoginPage.ts) - Encapsulates authentication.
+  * [CategoryPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/CategoryPage.ts) - Handles parent/child category selectors.
+  * [PartPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/PartPage.ts) - Manages parts, custom parameters, and stock items.
+* **Modern Locators**: Utilizes Playwright `Locator` instances instantiated in class constructors, combining resilient CSS fallback selectors with modern accessibility-first roles (`page.getByRole()`).
+
+### 2. API Automation: Controller Pattern
+* Located under [automation/api/](file:///Users/apple/Documents/qa_assessment/automation/api).
+* Implements the **Controller pattern** under [controllers/](file:///Users/apple/Documents/qa_assessment/automation/api/controllers):
+  * [CategoryController.ts](file:///Users/apple/Documents/qa_assessment/automation/api/controllers/CategoryController.ts) & [PartController.ts](file:///Users/apple/Documents/qa_assessment/automation/api/controllers/PartController.ts) wrap Playwright's `APIRequestContext`.
+  * Isolates raw HTTP requests, endpoints, and headers from test specs.
+  * Test files under `tests/` focus strictly on verifying status codes, schema schemas, and database relational integrity.
+
+---
+
+## ⚙️ Key Engineering Decisions
+
+To keep this codebase production-style, several critical architectural decisions were made:
+
+### 1. Test Isolation vs. State Dependencies
+* **Sequential Workflows (`workers: 1`)**: The UI and API tests interact with a shared, live instance of the application. To prevent concurrent database collisions and ID overrides, execution is configured to run sequentially (`workers: 1`, `fullyParallel: false`).
+* **Dynamic Data Lifecycle**: Test data is parameterized using dynamic timestamps (`Date.now()`) to guarantee uniqueness. An `afterAll` hook deletes created categories and parts, ensuring zero state pollution.
+
+### 2. Flaky Test Mitigation (Quarantine Strategy)
+* Instabilities are managed using a tag-based quarantine approach. Tests identified as unstable are tagged with `@flaky` (e.g., `test('Create Part @flaky', ...)`).
+* In CI/CD build gates, flaky tests are excluded to protect the release pipeline:
+  ```bash
+  npx playwright test --grep-invert "@flaky"
+  ```
+* A separate, scheduled nightly runner executes only the quarantined tests (`--grep "@flaky"`) to isolate and fix root causes (e.g. environment latency, network drops).
+
+### 3. Fail-Safe Triage & Reporting
+* **Trace Viewer Enabled**: Playwright config is set to `trace: 'retain-on-failure'`, capturing complete DOM snapshots, network payloads, console logs, and action timings for every failure.
+* **HTML Reports**: Generates standalone HTML dashboards and visual logs for quick debugging.
 
 ---
 
@@ -30,22 +66,16 @@ qa_assessment/
 │   ├── ui/                            # Playwright TypeScript UI Project
 │   │   ├── package.json
 │   │   ├── playwright.config.ts
-│   │   ├── tsconfig.json
-│   │   ├── pages/                     # Page Object Model (POM) Page Classes
-│   │   │   ├── LoginPage.ts
-│   │   │   ├── CategoryPage.ts
-│   │   │   └── PartPage.ts
-│   │   └── tests/
-│   │       └── parts-ui.spec.ts
+│   │   └── pages/                     # Page Object Model (POM) Page Classes
+│   │       ├── LoginPage.ts
+│   │       ├── CategoryPage.ts
+│   │       └── PartPage.ts
 │   └── api/                           # Playwright TypeScript API Project
 │       ├── package.json
 │       ├── playwright.config.ts
-│       ├── tsconfig.json
-│       ├── controllers/               # API Controllers (Endpoint wrappers)
-│       │   ├── CategoryController.ts
-│       │   └── PartController.ts
-│       └── tests/
-│           └── parts-api.spec.ts
+│       └── controllers/               # API Controllers (Endpoint wrappers)
+│           ├── CategoryController.ts
+│           └── PartController.ts
 ├── case_study_2/                      # Enterprise Strategy Proposal
 │   └── financial_test_strategy.md     # Pact contract testing, TDM, and SDET roadmap
 └── video/
@@ -56,60 +86,61 @@ qa_assessment/
 
 ## 🖥️ How to Run & Demo in VS Code
 
-This project has been pre-configured with all dependencies and browser installations completed. Follow these steps to demo the codebase:
+### Prerequisites
+* [Node.js](https://nodejs.org/) (v16 or higher)
+* Git
 
-### 1. Open in VS Code
-- Open **VS Code**.
-- Select **File > Open Folder...** and select this directory (`qa_assessment`).
+### 1. Setup & Installation
+Clone the repository and install dependencies in the respective directories:
+```bash
+git clone https://github.com/abhirise1981/qa_assessment.git
+cd qa_assessment
+```
 
-### 2. Run via the Playwright VS Code Extension (Visual Demo)
-1. Install the official **Playwright Test** extension by Microsoft from the Extensions Marketplace (`Cmd + Shift + X`).
-2. Click the **Testing (Beaker)** icon on the left sidebar.
-3. Check the **"Show browser"** checkbox at the bottom of the Testing panel to watch the execution live.
-4. Click the **Play button** next to any test (e.g. `parts-api.spec.ts`) to watch the test run in real-time.
+**For UI Project:**
+```bash
+cd automation/ui
+npm install
+npx playwright install chromium
+```
 
-### 3. Run via Terminal (Command Line Demo)
+**For API Project:**
+```bash
+cd automation/api
+npm install
+```
 
-Open the VS Code Terminal and run:
+### 2. Run via Terminal (Command Line Demo)
 
 * **To run UI Automation Tests**:
   ```bash
   cd automation/ui
-  npm install
-  npx playwright install
   npx playwright test
   ```
 
 * **To run API Automation Tests**:
   ```bash
   cd automation/api
-  npm install
-  npx playwright install
   npx playwright test
   ```
 
-### 4. Show the Interactive HTML Report
-To showcase the visual reports containing execution videos, screenshots, and API payload traces, execute:
+### 3. Visual Demo via Playwright VS Code Extension
+1. Open this repository in **VS Code**.
+2. Install the official **Playwright Test** extension by Microsoft.
+3. Open the **Testing (Beaker)** tab on the left sidebar.
+4. Check **"Show browser"** to watch the browser run in real-time.
+5. Click the play icon next to any UI or API test spec to run.
+
+### 4. Interactive Trace & Reporting
+Open execution logs, screenshot evidence, and API payloads in the browser:
 ```bash
 npx playwright show-report
 ```
 
 ---
 
-## 🚀 Key Framework Highlights
+## 🚀 Strategic Proposals & Quality Shift-Left
 
-### 1. Unified Test Automation (Playwright + TypeScript)
-* **Page Object Model (POM)**: Enforced strict separation of concerns for the UI project. Pages under `automation/ui/pages/` encapsulate element locators and actions, making test scripts readable and easily maintainable.
-* **API Controller Pattern**: The API project uses `CategoryController` and `PartController` to handle HTTP requests, headers, and payloads, keeping the test specs focused entirely on schema and status assertions.
-* **Data-Driven Loops**: Leveraged parameterized tests to run identical validation logic dynamically across multiple configuration objects, maximizing coverage while reducing code duplication.
-* **State Management**: Built configurations to handle session tokens and authentication states dynamically, bypassing UI logins for subsequent tests.
-
-### 2. Shift-Left Strategy & Test Design
-* Built comprehensive manual suites for both UI and API, highlighting:
-  * **Non-Functional Testing**: WCAG 2.1 Level AA accessibility checks (tab orders, focus states, ARIA roles).
-  * **Vulnerability Testing**: SQL Injection (SQLi) parameters validation, client-side Cross-Site Scripting (XSS) input sanitization, and API Rate-Limiting/throttling checks.
-
-### 3. Enterprise Quality Strategy (FinTech Showcase)
-* Designed a unified strategic roadmap to resolve a 30% production defect rate in a distributed multi-product architecture.
-* Details the setup of **Consumer-Driven Contract (CDC) Testing using Pact** to catch API version schema drifts early.
-* Outlines a secure **Test Data Management (TDM) pipeline** with dynamic data masking for compliance, automated CI/CD release gates, and a phased SDET upskilling roadmap.
+This project highlights quality leadership beyond script writing:
+* **Manual Design Audits**: Detailed [UI Manual Test Suite](file:///Users/apple/Documents/qa_assessment/test-cases/ui-manual-tests.md) and [API Manual Test Suite](file:///Users/apple/Documents/qa_assessment/test-cases/api-manual-tests.md) including accessibility (WCAG 2.1 Level AA) and vulnerability tests (XSS, Rate-Limiting, SQL Injection).
+* **Enterprise Test Strategy Proposal**: A strategic proposal ([financial_test_strategy.md](file:///Users/apple/Documents/qa_assessment/case_study_2/financial_test_strategy.md)) to resolve data inconsistencies in FinTech microservices using **Consumer-Driven Contract Testing (Pact)**, dynamic **Test Data Management (TDM)** pipelines, and automated quality gates.

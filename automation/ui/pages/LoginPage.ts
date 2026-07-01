@@ -1,13 +1,16 @@
-import { Page, expect } from '@playwright/test';
+import { Page, Locator } from '@playwright/test';
 
 export class LoginPage {
   private page: Page;
-  private usernameInput = '#id_username';
-  private passwordInput = '#id_password';
-  private submitButton = 'button[type="submit"], #submit-id-login';
+  private usernameInput: Locator;
+  private passwordInput: Locator;
+  private submitButton: Locator;
 
   constructor(page: Page) {
     this.page = page;
+    this.usernameInput = page.locator('#id_username');
+    this.passwordInput = page.locator('#id_password');
+    this.submitButton = page.locator('button[type="submit"], #submit-id-login');
   }
 
   async navigate() {
@@ -18,9 +21,9 @@ export class LoginPage {
     const user = process.env.INVENTREE_USER || 'admin';
     const pass = process.env.INVENTREE_PASSWORD || 'admin12345';
 
-    await this.page.fill(this.usernameInput, user);
-    await this.page.fill(this.passwordInput, pass);
-    await this.page.click(this.submitButton);
+    await this.usernameInput.fill(user);
+    await this.passwordInput.fill(pass);
+    await this.submitButton.click();
 
     // Wait for redirect to dashboard
     await this.page.waitForURL(/\/|dashboard/);
