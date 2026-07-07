@@ -1,8 +1,7 @@
 import { Page, Locator, expect } from '@playwright/test';
+import { BasePage } from './BasePage';
 
-export class PartPage {
-  private page: Page;
-  
+export class PartPage extends BasePage {
   // Locators
   private createPartButton: Locator;
   private partNameInput: Locator;
@@ -29,9 +28,8 @@ export class PartPage {
   private stockLocationSelect: Locator;
 
   constructor(page: Page) {
-    this.page = page;
+    super(page);
     
-    // UI elements resolved using resilient Locators
     this.createPartButton = page.locator('#btn-part-create').or(page.getByRole('button', { name: 'Create Part' }));
     this.partNameInput = page.locator('#id_name');
     this.partIPNInput = page.locator('#id_IPN');
@@ -57,7 +55,10 @@ export class PartPage {
   }
 
   async createPart(name: string, ipn: string, description: string, options: { assembly?: boolean; testable?: boolean } = {}) {
+    await this.waitForDOMStability(this.createPartButton);
     await this.createPartButton.click();
+
+    await this.waitForDOMStability(this.partNameInput);
     await this.partNameInput.fill(name);
     await this.partIPNInput.fill(ipn);
     await this.partDescInput.fill(description);
@@ -76,8 +77,10 @@ export class PartPage {
   }
 
   async editPartAssemblyAndComponent(assembly: boolean, component: boolean) {
+    await this.waitForDOMStability(this.editPartButton);
     await this.editPartButton.click();
     
+    await this.waitForDOMStability(this.assemblyCheckbox);
     if (assembly) {
       await this.assemblyCheckbox.check();
     } else {
@@ -96,6 +99,7 @@ export class PartPage {
 
   async addParameter(templateIndex: number, value: string) {
     await this.parametersTab.click();
+    await this.waitForDOMStability(this.addParameterButton);
     await this.addParameterButton.click();
     await this.parameterTemplateSelect.selectOption({ index: templateIndex });
     await this.parameterDataInput.fill(value);
@@ -104,6 +108,7 @@ export class PartPage {
 
   async addStockItem(quantity: string, locationIndex: number) {
     await this.stockTab.click();
+    await this.waitForDOMStability(this.addStockButton);
     await this.addStockButton.click();
     await this.stockQuantityInput.fill(quantity);
     await this.stockLocationSelect.selectOption({ index: locationIndex });

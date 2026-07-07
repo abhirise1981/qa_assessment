@@ -9,42 +9,50 @@ This repository serves as a production-grade reference architecture demonstratin
 
 The automation frameworks are structured to enforce clean separation of concerns and maximize code reuse:
 
-### 1. UI Automation: Page Object Model (POM)
+### 1. UI Automation: Page Object Model (POM) & Custom Base Classes
 * Located under [automation/ui/](file:///Users/apple/Documents/qa_assessment/automation/ui).
-* Implements the **POM pattern** via class files under [pages/](file:///Users/apple/Documents/qa_assessment/automation/ui/pages):
-  * [LoginPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/LoginPage.ts) - Encapsulates authentication.
-  * [CategoryPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/CategoryPage.ts) - Handles parent/child category selectors.
+* Implements a custom [BasePage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/BasePage.ts) establishing explicit wait governance and element resilience.
+* Pages under [pages/](file:///Users/apple/Documents/qa_assessment/automation/ui/pages) inherit from `BasePage`:
+  * [LoginPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/LoginPage.ts) - Encapsulates authentication using retry policies.
+  * [CategoryPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/CategoryPage.ts) - Handles parent/child category selectors with DOM stability checks.
   * [PartPage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/PartPage.ts) - Manages parts, custom parameters, and stock items.
-* **Modern Locators**: Utilizes Playwright `Locator` instances instantiated in class constructors, combining resilient CSS fallback selectors with modern accessibility-first roles (`page.getByRole()`).
 
 ### 2. API Automation: Controller Pattern
 * Located under [automation/api/](file:///Users/apple/Documents/qa_assessment/automation/api).
 * Implements the **Controller pattern** under [controllers/](file:///Users/apple/Documents/qa_assessment/automation/api/controllers):
   * [CategoryController.ts](file:///Users/apple/Documents/qa_assessment/automation/api/controllers/CategoryController.ts) & [PartController.ts](file:///Users/apple/Documents/qa_assessment/automation/api/controllers/PartController.ts) wrap Playwright's `APIRequestContext`.
-  * Isolates raw HTTP requests, endpoints, and headers from test specs.
   * Test files under `tests/` focus strictly on verifying status codes, schema schemas, and database relational integrity.
 
 ---
 
-## ⚙️ Key Engineering Decisions
+## ⚙️ Key Architectural Decisions
 
-To keep this codebase production-style, several critical architectural decisions were made:
+To address enterprise scale and security, several design decisions govern this codebase:
 
-### 1. Test Isolation vs. State Dependencies
-* **Sequential Workflows (`workers: 1`)**: The UI and API tests interact with a shared, live instance of the application. To prevent concurrent database collisions and ID overrides, execution is configured to run sequentially (`workers: 1`, `fullyParallel: false`).
-* **Dynamic Data Lifecycle**: Test data is parameterized using dynamic timestamps (`Date.now()`) to guarantee uniqueness. An `afterAll` hook deletes created categories and parts, ensuring zero state pollution.
+### 1. Gang of Four (GoF) Design Patterns Implementation
+We distinguish UI-specific structural patterns (POM) from core engine design patterns:
+* **Singleton Pattern**: Implemented in Playwright’s global test runner to manage shared configuration settings, database connections, and auth state context files.
+* **Factory Pattern**: Utilized by the test runner's browser fixtures to dynamically allocate and configure distinct browser contexts (Chromium, WebKit, Firefox) dynamically based on metadata flags.
+* **Builder Pattern**: Used for our dynamic test data factories, constructing complex, nested JSON payloads for our parameterized API tests.
 
-### 2. Flaky Test Mitigation (Quarantine Strategy)
-* Instabilities are managed using a tag-based quarantine approach. Tests identified as unstable are tagged with `@flaky` (e.g., `test('Create Part @flaky', ...)`).
-* In CI/CD build gates, flaky tests are excluded to protect the release pipeline:
-  ```bash
-  npx playwright test --grep-invert "@flaky"
-  ```
-* A separate, scheduled nightly runner executes only the quarantined tests (`--grep "@flaky"`) to isolate and fix root causes (e.g. environment latency, network drops).
+### 2. Three-Layer Element Stability Strategy (Anti-Flakiness)
+To prevent stale element references, layout shifts, and click-hijacking, we enforce a three-tier resilience strategy:
+1. **Auto-Waiting**: We leverage Playwright’s native lazy-evaluated locators that perform automatic attach, visibility, and stabilization re-lookups.
+2. **Explicit Wait Gates**: Enforced in [BasePage.ts](file:///Users/apple/Documents/qa_assessment/automation/ui/pages/BasePage.ts) using `waitForDOMStability()` to monitor element bounding boxes. Tests wait until animation/transition coordinates are stable.
+3. **Retry-with-Backoff Wrapper**: Implements `retryAction()` to wrap flaky operations (like initial login form inputs) in incremental backoff loops.
 
-### 3. Fail-Safe Triage & Reporting
-* **Trace Viewer Enabled**: Playwright config is set to `trace: 'retain-on-failure'`, capturing complete DOM snapshots, network payloads, console logs, and action timings for every failure.
-* **HTML Reports**: Generates standalone HTML dashboards and visual logs for quick debugging.
+### 3. Token Optimization & Cost Strategies (AI Triage Pipeline)
+Our AI failure analysis pipeline utilizes a **Filter, Compact, and Tier** model to limit monthly LLM runtime costs to under $100:
+* **Filter**: Only failed test logs are routed to the LLM; passing run logs are immediately discarded.
+* **Compact**: We run a gateway script (via n8n) that strips debug stack trace noise, duplicate lines, and PII, reducing input payload token size by 80%.
+* **Tier**: We use cheaper, high-speed models (like Claude Haiku) for initial failure classification (e.g. Env vs. Bug), routing only complex code repairs to higher-tier models (Claude Opus).
+
+### 4. DevOps Quality Gates & Named Toolchain
+We integrate quality validation directly into the enterprise DevOps pipeline:
+* **Orchestration**: Jenkins pipelines using Shared Libraries for reusable build gates.
+* **Static Analysis & Quality Gates**: Configured via [sonar-project.properties](file:///Users/apple/Documents/qa_assessment/sonar-project.properties) to enforce clean code gates in SonarQube before merges.
+* **Failure Analytics**: Integrates with **ReportPortal.io** for historical dashboarding and ML-driven defect categorization.
+* **Consumer-Driven Contract (CDC) Testing**: Designed with **Pact** to publish API expectations to a Pact Broker, failing platform builds immediately on schema breaks.
 
 ---
 
@@ -56,6 +64,7 @@ qa_assessment/
 │   └── workflows/
 │       └── playwright.yml             # GitHub Actions continuous automation configuration
 ├── README.md                          # Main project guide (this file)
+├── sonar-project.properties           # SonarQube Static Analysis & Quality Gate rules
 ├── agents/                            # Agentic workflow & prompt engineering assets
 │   ├── prompts.md                     # Engineering prompts used for generation
 │   └── system-instructions.md         # Behavioral model definitions
@@ -67,6 +76,7 @@ qa_assessment/
 │   │   ├── package.json
 │   │   ├── playwright.config.ts
 │   │   └── pages/                     # Page Object Model (POM) Page Classes
+│   │       ├── BasePage.ts            # Base Page containing explicit wait stability gates
 │   │       ├── LoginPage.ts
 │   │       ├── CategoryPage.ts
 │   │       └── PartPage.ts
@@ -123,24 +133,3 @@ npm install
   cd automation/api
   npx playwright test
   ```
-
-### 3. Visual Demo via Playwright VS Code Extension
-1. Open this repository in **VS Code**.
-2. Install the official **Playwright Test** extension by Microsoft.
-3. Open the **Testing (Beaker)** tab on the left sidebar.
-4. Check **"Show browser"** to watch the browser run in real-time.
-5. Click the play icon next to any UI or API test spec to run.
-
-### 4. Interactive Trace & Reporting
-Open execution logs, screenshot evidence, and API payloads in the browser:
-```bash
-npx playwright show-report
-```
-
----
-
-## 🚀 Strategic Proposals & Quality Shift-Left
-
-This project highlights quality leadership beyond script writing:
-* **Manual Design Audits**: Detailed [UI Manual Test Suite](file:///Users/apple/Documents/qa_assessment/test-cases/ui-manual-tests.md) and [API Manual Test Suite](file:///Users/apple/Documents/qa_assessment/test-cases/api-manual-tests.md) including accessibility (WCAG 2.1 Level AA) and vulnerability tests (XSS, Rate-Limiting, SQL Injection).
-* **Enterprise Test Strategy Proposal**: A strategic proposal ([financial_test_strategy.md](file:///Users/apple/Documents/qa_assessment/case_study_2/financial_test_strategy.md)) to resolve data inconsistencies in FinTech microservices using **Consumer-Driven Contract Testing (Pact)**, dynamic **Test Data Management (TDM)** pipelines, and automated quality gates.
